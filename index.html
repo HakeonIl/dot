@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>도트 공방 · 픽셀 애니메이터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&family=Silkscreen&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="top">
+  <h1 class="logo"><i aria-hidden="true"></i>DOT <small>공방</small></h1>
+  <div class="spacer"></div>
+  <span class="seg" role="group" aria-label="모드 선택">
+    <button class="btn" id="modeFreeBtn" aria-pressed="true">자유 모드</button>
+    <button class="btn" id="modeMzBtn" aria-pressed="false">MZ 캐릭터</button>
+  </span>
+  <button class="btn" id="undoBtn" aria-label="실행 취소" title="실행 취소 (Ctrl+Z)">
+    <svg class="ic" viewBox="0 0 16 16"><path d="M5 3h2v2H5zM3 5h2v2H3zM5 7h2v2H5zM5 5h7v2H5zM12 6h2v6h-2zM6 11h6v2H6z"/></svg></button>
+  <button class="btn" id="redoBtn" aria-label="다시 실행" title="다시 실행 (Ctrl+Y)">
+    <svg class="ic" viewBox="0 0 16 16"><path d="M9 3h2v2H9zM11 5h2v2h-2zM9 7h2v2H9zM4 5h7v2H4zM2 6h2v6H2zM4 11h6v2H4z"/></svg></button>
+  <select class="btn" id="sizeSel" aria-label="캔버스 크기">
+    <option value="16">16×16</option><option value="24">24×24</option><option value="32">32×32</option><option value="48">48×48</option>
+  </select>
+  <button class="btn primary" id="fileBtn">저장·내보내기</button>
+</header>
+
+<main class="layout">
+  <section class="stage">
+    <div class="canvas-wrap" id="wrap"><canvas id="editor" aria-label="도트 캔버스"></canvas></div>
+
+    <div class="tools" role="toolbar" aria-label="도구">
+      <button class="btn" data-tool="pen" aria-pressed="true"><svg class="ic" viewBox="0 0 16 16"><path d="M12 1h3v3h-3zM10 3h3v3h-3zM8 5h3v3H8zM6 7h3v3H6zM4 9h3v3H4zM2 11h3v2H2zM1 13h2v2H1z"/></svg>펜</button>
+      <button class="btn" data-tool="eraser" aria-pressed="false"><svg class="ic" viewBox="0 0 16 16"><path d="M8 2h3v1H8zM7 3h5v1H7zM6 4h7v1H6zM5 5h9v1H5zM4 6h8v1H4zM3 7h7v1H3zM2 8h6v3H2zM3 11h4v1H3zM2 13h12v1H2z"/></svg>지우개</button>
+      <button class="btn" data-tool="fill" aria-pressed="false"><svg class="ic" viewBox="0 0 16 16"><path d="M6 1h2v3H6zM3 4h8v1H3zM2 5h1v6H2zM11 5h1v6h-1zM3 11h8v1H3zM3 7h8v4H3zM13 8h2v4h-2zM12 12h3v2h-3z"/></svg>채우기</button>
+      <button class="btn" data-tool="picker" aria-pressed="false"><svg class="ic" viewBox="0 0 16 16"><path d="M11 1h3v1h-3zM10 2h5v3h-5zM9 5h3v1H9zM8 6h3v1H8zM7 7h3v1H7zM6 8h3v1H6zM5 9h3v1H5zM4 10h3v1H4zM3 11h3v1H3zM2 12h3v2H2zM1 14h2v1H1z"/></svg>스포이트</button>
+      <button class="btn" id="mirrorBtn" aria-pressed="false" title="좌우 대칭으로 그리기"><svg class="ic" viewBox="0 0 16 16"><path d="M7 1h2v14H7zM1 4h1v8H1zM2 5h1v6H2zM3 6h1v4H3zM4 7h1v2H4zM14 4h1v8h-1zM13 5h1v1h-1zM13 10h1v1h-1zM12 6h1v1h-1zM12 9h1v1h-1zM11 7h1v2h-1z"/></svg>대칭</button>
+      <button class="btn" id="gridBtn" aria-pressed="true"><svg class="ic" viewBox="0 0 16 16"><path d="M1 1h14v1H1zM1 5h14v1H1zM1 10h14v1H1zM1 14h14v1H1zM1 1h1v14H1zM5 1h1v14H5zM10 1h1v14h-1zM14 1h1v14h-1z"/></svg>격자</button>
+    </div>
+
+    <div class="palette-row">
+      <div class="current" id="currentSw" title="색 직접 고르기"><input type="color" id="colorInput" aria-label="색 직접 고르기"></div>
+      <div class="palette" id="palette" role="group" aria-label="팔레트"></div>
+    </div>
+    <div class="palette-row" id="importColorsWrap" hidden style="margin-top:6px">
+      <div style="font-size:12px;color:var(--muted);flex:none;width:44px;padding-top:4px">이 그림의 색</div>
+      <div class="palette" id="importColors" role="group" aria-label="이 그림의 색"></div>
+    </div>
+    <p class="hint">왼쪽 큰 칸을 누르면 원하는 색을 직접 고를 수 있어요. 마우스 우클릭은 지우개로 동작합니다.</p>
+  </section>
+
+  <aside class="side">
+    <div class="panel frames-panel">
+      <h2><span id="frameTitle">프레임</span> <span class="count" id="frameInfo">1 / 1</span><span class="grow"></span>
+        <button class="btn" id="onionBtn" aria-pressed="true" title="앞뒤 프레임을 흐리게 겹쳐 보여요" style="min-height:32px;font-size:13px">어니언 스킨</button></h2>
+      <div class="strip" id="strip"></div>
+      <div class="mz-grid" id="mzGrid" hidden></div>
+      <div class="actions">
+        <button class="btn" id="addBtn">＋ 새 프레임</button>
+        <button class="btn" id="dupBtn">복제</button>
+        <button class="btn" id="delBtn">삭제</button>
+        <button class="btn" id="leftBtn">◀ 앞으로</button>
+        <button class="btn" id="rightBtn">뒤로 ▶</button>
+        <button class="btn" id="clearBtn">비우기</button>
+        <button class="btn" id="mzCopyMidBtn" hidden>가운데를 이 방향에 복사</button>
+        <button class="btn" id="mzMirrorL2RBtn" hidden>왼쪽→오른쪽 반전복사</button>
+      </div>
+      <p class="sub">현재 프레임 그림 옮기기 · 뒤집기</p>
+      <div class="nudge">
+        <button class="btn" data-shift="0,-1" aria-label="위로 1칸">↑</button>
+        <button class="btn" data-shift="0,1" aria-label="아래로 1칸">↓</button>
+        <button class="btn" data-shift="-1,0" aria-label="왼쪽으로 1칸">←</button>
+        <button class="btn" data-shift="1,0" aria-label="오른쪽으로 1칸">→</button>
+        <button class="btn" id="flipHBtn" aria-label="좌우 뒤집기" title="좌우 뒤집기">⇋</button>
+        <button class="btn" id="flipVBtn" aria-label="상하 뒤집기" title="상하 뒤집기">⇵</button>
+      </div>
+    </div>
+
+    <div class="panel preview-panel">
+      <h2>미리보기<span class="grow"></span>
+        <span class="seg" role="group" aria-label="미리보기 방식">
+          <button class="btn" id="modeStay" aria-pressed="false">제자리</button>
+          <button class="btn" id="modeWalk" aria-pressed="true">걸어가기</button>
+        </span></h2>
+      <div class="dir-btns" id="mzDirRow" hidden role="group" aria-label="MZ 방향">
+        <button class="btn" data-mzdir="0" aria-pressed="true">아래</button>
+        <button class="btn" data-mzdir="1" aria-pressed="false">왼쪽</button>
+        <button class="btn" data-mzdir="2" aria-pressed="false">오른쪽</button>
+        <button class="btn" data-mzdir="3" aria-pressed="false">위</button>
+      </div>
+      <canvas id="preview" aria-label="애니메이션 미리보기"></canvas>
+      <div class="row">
+        <button class="btn" id="playBtn" aria-pressed="true" style="min-width:80px">일시정지</button>
+        <label>속도 <input type="range" id="fpsRange" min="1" max="24" value="6"><output id="fpsOut">6 fps</output></label>
+      </div>
+      <div class="row" id="walkRow">
+        <label>이동 거리 <input type="range" id="speedRange" min="0" max="6" value="2"><output id="speedOut">2칸</output></label>
+      </div>
+    </div>
+
+    <div class="panel ai-panel">
+      <h2>AI로 찍기<span class="grow"></span>
+        <button class="btn" id="aiSettingsBtn" style="min-height:32px;font-size:13px">AI 설정</button></h2>
+      <p class="ai-target" id="aiTargetLine">대상: -</p>
+      <textarea id="aiPrompt" placeholder="갈색 머리 소년, 파란 옷, 갈색 신발 / 머리를 한 칸 위로" aria-label="AI 프롬프트"></textarea>
+      <div class="ai-refrow" id="aiRefRow">
+        <span class="ai-refcap">참고 이미지</span>
+        <button class="btn" id="aiRefPickBtn" type="button">이미지 선택</button>
+        <input type="file" id="aiRefFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+        <img id="aiRefPrev" alt="참고 이미지 미리보기" hidden>
+        <span class="ai-refmeta" id="aiRefMeta"></span>
+        <button class="btn" id="aiRefClear" type="button" hidden>지우기</button>
+      </div>
+      <div class="ai-err" id="aiRefWarn" hidden></div>
+      <label class="ai-check"><input type="checkbox" id="aiForceNew"> 현재 그림 무시하고 새로 그리기</label>
+      <div class="frow"><label for="aiFormatSel">출력 형식</label><select id="aiFormatSel"><option value="plain">격자</option><option value="numbered" selected>줄번호 격자</option><option value="rle">줄 압축(RLE)</option></select></div>
+      <label class="ai-check"><input type="checkbox" id="aiAutoFix"> 자동 보정</label>
+      <div class="frow"><label for="aiCandSel">후보 수</label><select id="aiCandSel"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+      <div class="ai-row">
+        <button class="btn primary" id="aiGenerateBtn">찍기</button>
+        <button class="btn" id="aiAutoBtn" hidden>12장 자동 찍기</button>
+        <span class="ai-cand-label" id="aiCandLabel">후보 1장</span>
+        <button class="btn" id="aiPasteBtn">응답 직접 붙여넣기</button>
+        <button class="btn" id="aiCopyPromptBtn">보낼 프롬프트 복사</button>
+        <button class="btn" id="aiCandReviewBtn" hidden>후보 다시 보기</button>
+        <button class="btn" id="aiLogBtn">기록 보기</button>
+        <button class="btn" id="aiCancelBtn" hidden>취소</button>
+      </div>
+      <details id="aiRawDetails"><summary>디버그</summary><div class="ai-cap">보낸 메시지 전문</div><div class="ai-raw" id="aiSentText">아직 보낸 내용이 없어요.</div><div class="ai-cap">보낸 요청 body</div><div class="ai-raw" id="aiBodyText">아직 보낸 요청이 없어요.</div><div class="ai-err" id="aiRawErr" hidden></div><div class="ai-raw" id="aiRawText">아직 응답이 없어요.</div><div class="ai-stats" id="aiStatsText">보낸 글자 수: 0
+토큰 사용량: 알 수 없음</div></details>
+    </div>
+  </aside>
+</main>
+
+<dialog id="fileDlg">
+  <h3>저장·내보내기</h3>
+  <p>작업 내용은 이 브라우저에 자동으로 보관돼요. 다른 곳에서 쓰려면 파일로 저장하세요.</p>
+  <div class="dlg-row" id="scaleRow">내보내기 배율
+    <select class="btn" id="scaleSel" aria-label="내보내기 배율">
+      <option value="1">1배</option><option value="4">4배</option><option value="8" selected>8배</option><option value="16">16배</option>
+    </select>
+  </div>
+  <div class="dlg-row" id="mzScaleNote" hidden style="font-size:13px;color:var(--muted)">MZ 시트 PNG는 1배 고정으로 저장돼요. GIF는 위 배율이 적용됩니다.</div>
+  <div class="dlg-grid">
+    <div id="freeExportBox">
+      <button class="btn" id="exGif">움직이는 GIF <small>.gif</small></button>
+      <button class="btn" id="exSheet">스프라이트 시트 <small>가로 나열 .png</small></button>
+      <button class="btn" id="exFrame">현재 프레임만 <small>.png</small></button>
+    </div>
+    <div id="mzExportBox" hidden>
+      <div class="mz-form">
+        <div class="frow"><label for="mzName">파일명</label><input type="text" id="mzName" value="hero" maxlength="40"><select id="mzPrefix" aria-label="접두사"><option value="">없음</option><option value="$" selected>$</option><option value="!">!</option><option value="!$">!$</option></select></div>
+        <div class="frow"><label for="mzExpType">종류</label><select id="mzExpType"><option value="single">단일 캐릭터 144×192</option><option value="slot">8인 시트 슬롯 576×384</option></select>
+        <select id="mzSlotSel" aria-label="슬롯"><option value="0">슬롯 0</option><option value="1">슬롯 1</option><option value="2">슬롯 2</option><option value="3">슬롯 3</option><option value="4">슬롯 4</option><option value="5">슬롯 5</option><option value="6">슬롯 6</option><option value="7">슬롯 7</option></select></div>
+        <div class="frow" id="mzBaseRow"><label for="mzSlotBaseSel">바탕</label><select id="mzSlotBaseSel"><option value="empty">빈 시트에 넣기</option><option value="loaded">불러온 시트에 덮어쓰기</option></select></div>
+        <div class="warn" id="mzDollarWarn" hidden>$가 없으면 MZ가 8인 시트로 인식합니다</div>
+        <button class="btn" id="exMzPng">MZ PNG 내보내기 <small>144×192 / 576×384</small></button>
+        <button class="btn" id="exMzGif">현재 방향 GIF <small>배율 적용</small></button>
+      </div>
+    </div>
+    <hr>
+    <button class="btn" id="exJson">프로젝트 저장 <small>.json</small></button>
+    <button class="btn" id="imJson">프로젝트 불러오기 <small>.json</small></button>
+    <input type="file" id="fileInput" accept=".json,application/json" hidden>
+    <button class="btn" id="imPngBtn">PNG 시트 불러오기 <small>.png</small></button>
+    <input type="file" id="pngInput" accept="image/png" hidden>
+    <hr>
+    <button class="btn" id="sampleBtn">예제 걷기 캐릭터 불러오기</button>
+    <button class="btn" id="newBtn">새로 시작하기</button>
+    <button class="btn" id="closeDlg" style="justify-content:center">닫기</button>
+  </div>
+</dialog>
+
+<dialog id="slotDlg">
+  <h3>슬롯 선택</h3>
+  <p>576×384 시트에서 불러올 칸을 고르세요. 원본은 보관되어 덮어쓰기에 쓰입니다.</p>
+  <div class="slot-grid" id="slotGrid"></div>
+  <div class="dlg-grid"><button class="btn" id="slotCancel" style="justify-content:center">취소</button></div>
+</dialog>
+
+<dialog id="aiSettingsDlg">
+  <h3>AI 설정</h3>
+  <p>OpenRouter 키와 모델 이름을 입력하세요. 이 값은 이 브라우저에만 저장되고 프로젝트 파일에는 들어가지 않아요.</p>
+  <div class="ai-form">
+    <div class="frow"><label for="aiKey">API 키</label><input type="password" id="aiKey" autocomplete="off" placeholder="sk-or-..."><button class="btn" id="aiKeyToggle" style="min-height:38px;flex:none">보기</button></div>
+    <div class="frow"><label for="aiModel">모델</label><input type="text" id="aiModel" autocomplete="off" placeholder="anthropic/claude-..." list="aiModelList"><datalist id="aiModelList"></datalist></div>
+    <div class="ai-stats" id="aiModelInfo"></div>
+    <div class="ai-err" id="aiModelWarn" hidden></div>
+    <button class="btn" id="aiModelsRetry" hidden style="justify-content:center">다시 불러오기</button>
+    <details class="ai-adv" id="aiAdvDetails"><summary>고급</summary>
+      <div class="ai-cap">요청 파라미터 (비우면 보내지 않음)</div>
+      <div class="frow"><label for="aiReasoning">추론 강도</label><select id="aiReasoning"><option value="">보내지 않음</option><option value="low">low</option><option value="medium">medium</option><option value="high">high</option></select><span class="ai-note" id="aiReasoningNote" hidden></span></div>
+      <div class="frow"><label for="aiMaxTokens">최대 출력 토큰</label><input type="text" id="aiMaxTokens" inputmode="numeric" placeholder="비워 둠"><span class="ai-note" id="aiMaxTokensNote" hidden></span></div>
+      <div class="frow"><label for="aiTemperature">temperature (0~2)</label><input type="text" id="aiTemperature" inputmode="decimal" placeholder="비워 둠"><span class="ai-note" id="aiTemperatureNote" hidden></span></div>
+      <div class="frow"><label for="aiSeed">seed</label><input type="text" id="aiSeed" inputmode="numeric" placeholder="비워 둠"><span class="ai-note" id="aiSeedNote" hidden></span></div>
+      <div class="ai-cap">시스템 프롬프트 <span id="aiSysModified" hidden>(수정됨)</span></div>
+      <textarea id="aiSysPrompt" aria-label="시스템 프롬프트"></textarea>
+      <div class="ai-err" id="aiSysWarn" hidden></div>
+      <button class="btn" id="aiSysReset" style="justify-content:center">기본값으로</button>
+      <div id="aiFakeWrap" hidden>
+      <div class="ai-cap">가짜 응답 (test/ 모델용, ===== 한 줄로 구분)</div>
+      <textarea id="aiFakeResp" aria-label="가짜 응답" placeholder="PALETTE&#10;0 transparent&#10;..."></textarea>
+      </div>
+    </details>
+    <button class="btn" id="aiKeyCheckBtn" style="justify-content:center">키 확인</button>
+    <button class="btn primary" id="aiSettingsClose" style="justify-content:center">닫기</button>
+  </div>
+</dialog>
+
+<dialog id="aiPasteDlg">
+  <h3>응답 직접 붙여넣기</h3>
+  <p>다른 곳에서 받은 AI 응답 텍스트를 그대로 붙여넣으세요. 같은 파서로 현재 프레임에 적용됩니다.</p>
+  <p class="ai-target" id="aiPasteFmt">형식: 줄번호 격자</p>
+  <div class="dlg-grid">
+    <textarea id="aiPasteText" aria-label="AI 응답 붙여넣기"></textarea>
+    <button class="btn primary" id="aiPasteApply">현재 프레임에 적용</button>
+    <button class="btn" id="aiPasteCancel" style="justify-content:center">취소</button>
+  </div>
+</dialog>
+
+<dialog id="aiCandDlg">
+  <h3>후보 결과</h3>
+  <p id="aiCandInfo">후보를 만드는 중…</p>
+  <div class="cand-grid" id="aiCandGrid"></div>
+  <div class="dlg-grid"><button class="btn" id="aiCandCancelAll" hidden style="justify-content:center">모두 취소</button><button class="btn" id="aiCandClose" style="justify-content:center">닫기</button></div>
+</dialog>
+
+<dialog id="aiLogDlg">
+  <h3>실험 기록</h3>
+  <p id="aiLogSummary">기록이 없어요.</p>
+  <div class="log-wrap"><table class="log-table"><thead><tr><th>시각</th><th>모델</th><th>실제 모델</th><th>형식</th><th>추론</th><th>max</th><th>temp</th><th>seed</th><th>sys</th><th>대상</th><th>생성/수정</th><th>후보</th><th>프롬프트</th><th>결과</th><th>이유</th><th>보정</th><th>finish</th><th>입력</th><th>출력</th><th>추론</th><th>비용</th><th>시간(ms)</th><th>참고 이미지</th><th>자동</th><th>원문</th></tr></thead><tbody id="aiLogBody"></tbody></table></div>
+  <div class="dlg-grid">
+    <button class="btn" id="aiLogCsv">CSV로 저장 <small>.csv</small></button>
+    <button class="btn" id="aiLogClear">기록 지우기</button>
+    <button class="btn" id="aiLogClose" style="justify-content:center">닫기</button>
+  </div>
+</dialog>
+
+<dialog id="aiRawDlg">
+  <h3>응답 원문</h3>
+  <div class="ai-raw" id="aiRawView">(없음)</div>
+  <div class="dlg-grid"><button class="btn" id="aiRawClose" style="justify-content:center">닫기</button></div>
+</dialog>
+
+<dialog id="aiAutoSetupDlg">
+  <h3>12장 자동 찍기</h3>
+  <p>캐릭터 설명이나 참고 그림으로 12칸을 순서대로 찍어요. 앞 단계 결과가 뒤 단계의 참고 그림이 됩니다.</p>
+  <div class="ai-form">
+    <div class="ai-cap">캐릭터 설명</div>
+    <textarea id="aiAutoDesc" aria-label="캐릭터 설명"></textarea>
+    <div class="ai-refrow" id="aiAutoRefRow">
+      <span class="ai-refcap">참고 이미지</span>
+      <button class="btn" id="aiAutoRefPick" type="button">이미지 선택</button>
+      <input type="file" id="aiAutoRefFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+      <img id="aiAutoRefPrev" alt="참고 이미지 미리보기" hidden>
+      <span class="ai-refmeta" id="aiAutoRefMeta"></span>
+      <button class="btn" id="aiAutoRefClear" type="button" hidden>지우기</button>
+    </div>
+    <div class="ai-cap">오른쪽 방향</div>
+    <label class="ai-check"><input type="radio" name="aiAutoRight" value="mirror" checked> 왼쪽을 반전해서 채우기</label>
+    <label class="ai-check"><input type="radio" name="aiAutoRight" value="ai"> AI로 찍기</label>
+    <div class="ai-cap">이미 그림이 있는 칸</div>
+    <label class="ai-check"><input type="radio" name="aiAutoExist" value="skip" checked> 건너뛰기</label>
+    <label class="ai-check"><input type="radio" name="aiAutoExist" value="over"> 모두 새로 찍기</label>
+    <div class="frow"><label for="aiAutoRetry">실패 시 재시도</label><input type="number" id="aiAutoRetry" min="0" max="3" value="2"></div>
+    <div class="ai-stats" id="aiAutoInfo"></div>
+    <button class="btn primary" id="aiAutoStart" style="justify-content:center">시작</button>
+    <button class="btn" id="aiAutoSetupClose" style="justify-content:center">취소</button>
+  </div>
+</dialog>
+
+<dialog id="aiAutoProgDlg">
+  <h3>12장 자동 찍기</h3>
+  <p id="aiAutoProgSum">준비 중…</p>
+  <div class="auto-list" id="aiAutoProgList"></div>
+  <div class="dlg-grid"><button class="btn" id="aiAutoStop" style="justify-content:center">중지</button><button class="btn primary" id="aiAutoClose" style="justify-content:center" hidden>닫기</button></div>
+</dialog>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/state.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/frames.js"></script>
+<script src="js/preview.js"></script>
+<script src="js/io.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/gif.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
